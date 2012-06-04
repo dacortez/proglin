@@ -32,7 +32,7 @@ function [T B m ind] = phase_1(A, b, m, n, print)
 	B = n+1:n+m;
 	
 	# Itera o tableau até encontrar solução.
-	[T B] = tableau_solve(T, B, m, m + n, print, 1);
+	[T B iter] = tableau_solve(T, B, m, m + n, print, 1);
 		
 	# Testa se o problema é viável.
 	if T(1, 1) == 0
@@ -42,9 +42,13 @@ function [T B m ind] = phase_1(A, b, m, n, print)
 
 		# Remove restrições redundantes.
 		[T B m] = remove_redundants(T, B, m, n);
+		
+		if print
+			print_tableau(T, B, m, n, 0, 0, iter++);
+		endif
 
 		# Retira variáveis artificiais da solução básica encontrada.
-		[T B] = exit_artificials(T, B, m, n);
+		[T B] = exit_artificials(T, B, m, n, iter++);
 	endif
 endfunction
 
@@ -83,11 +87,14 @@ function [T B m] = remove_redundants(T, B, m, n)
 endfunction
 
 
-function [T B] = exit_artificials(T, B, m, n)
+function [T B] = exit_artificials(T, B, m, n, iter)
 	for i = 1:m
 		if B(i) > n
 			for j = 1:n
 				if T(i + 1, j + 1) != 0
+					if print
+						print_tableau(T, B, m, n, i + 1, j + 1, iter++);
+					endif
 					T = pivot(T, i + 1, j + 1, m + 1, n + 1);
 					B(i) = j;
 				endif
@@ -118,11 +125,11 @@ function [ind x] = phase_2(T, B, c, m, n, print)
 	T(1, 2:n+1) = c' - c_B' * T(2:m+1, 2:n+1);
 
 	# Itera o tableau até encontrar solução.
-	[T B ind x] = tableau_solve(T, B, m, n, print, 1);
+	[T B iter ind x] = tableau_solve(T, B, m, n, print, 1);
 endfunction
 
 
-function [T B ind x] = tableau_solve(T, B, m, n, print, iter)
+function [T B iter ind x] = tableau_solve(T, B, m, n, print, iter)
 
 	while true
 		
@@ -169,7 +176,7 @@ function [T B ind x] = tableau_solve(T, B, m, n, print, iter)
 			x = get_solution(T, B, m, n);
 			
 			if print
-				print_tableau(T, B, m, n, 0, 0, iter);
+				print_tableau(T, B, m, n, 0, 0, iter++);
 			endif
 			
 			return;
@@ -207,6 +214,26 @@ endfunction
 
 
 function print_tableau(T, B, m, n, i_pivot, j_pivot, iter)
-	iter
-	T
+	# Número da interação.
+	printf("Iteração %5d\n", iter);
+	
+	# Imprime nome das variáveis.
+	printf("           |");
+	for j = 1:n
+		printf(" x%1d      |", j);
+	endfor
+	printf("\n");
+	
+	# Primeira linha do tableau com custo e custos reduzidos.
+	printf("    %5.3f |", T(1, 1));
+	for j = 2:n+1
+		printf(" %5.3f |", T(1, j));
+	endfor
+	printf("\n");
+	
+	printf("------------");
+	for j = 2:n+1
+		printf("----------");
+	endfor
+	printf("\n");
 endfunction
