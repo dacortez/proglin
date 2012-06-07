@@ -215,25 +215,43 @@ endfunction
 
 function print_tableau(T, B, m, n, i_pivot, j_pivot, iter)
 	# Número da interação.
-	printf("Iteração %5d\n", iter);
+	printf("Iteração %d\n", iter);
 	
-	# Imprime nome das variáveis.
+	# Imprime linha com nome das variáveis.
 	printf("           |");
 	for j = 1:n
-		printf(" x%1d      |", j);
+		printf(" x%d      |", j);
 	endfor
 	printf("\n");
 	
-	# Primeira linha do tableau com custo e custos reduzidos.
-	printf("    %5.3f |", T(1, 1));
+	# Imprime linha com custo e custos reduzidos.
+	printf(" %9.3f |", T(1, 1));
 	for j = 2:n+1
-		printf(" %5.3f |", T(1, j));
+		printf(" %7.3f |", T(1, j));
 	endfor
 	printf("\n");
 	
+	# Imprime linha pontilhada.
 	printf("------------");
 	for j = 2:n+1
 		printf("----------");
 	endfor
+	printf("\n");
+	
+	# Imprime demais linhas do tableau.
+	for i = 2:m+1
+		# Primeira coluna com nome das variáveis básicas.
+		printf("x%d %7.3f |", B(i - 1), T(i, 1));
+		for j = 2:n+1
+			if i_pivot != 0 && j_pivot != 0 && i == i_pivot && j == j_pivot
+				mark = '*';
+			else
+			 	mark = ' ';
+			endif
+			printf(" %7.3f%c|", T(i, j), mark);
+		endfor
+		printf("\n");
+	endfor
+
 	printf("\n");
 endfunction
