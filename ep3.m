@@ -1,8 +1,8 @@
-m = randi([1, 20])
-n = randi([m, 20])
-A = randn(m, n)
-b = randn(m, 1)
-c = randn(n, 1)
+m = randi([5, 15])
+n = randi([20, 50])
+A = randi([0, 1], m, n)
+b = ones(m, 1)
+c = rand(n, 1)
 [ind x] = simplex(A, b, c, m, n, true)
 
 
