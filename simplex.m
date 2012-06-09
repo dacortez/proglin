@@ -4,9 +4,9 @@ function [ind x] = simplex(A, b, c, m, n, print)
 	[T B m] = phase_1(A, b, m, n, print);
 	
 	# Testa se o problema é inviável.
-	if T(1, 1) > 0
-		ind = +1
-		x = []
+	if T(1, 1) < 0
+		ind = +1;
+		x = [];
 		return;
 	end
 	
@@ -17,7 +17,9 @@ endfunction
 
 function [T B m ind] = phase_1(A, b, m, n, print)
 	
-	printf("Simplex: Fase 1\n\n");
+	if print
+		printf("Simplex: Fase 1\n\n");
+	endif
 	
 	# Coloca no formato b >= 0.
 	[A b] = make_b_positive(A, b, m, n);
@@ -65,7 +67,11 @@ endfunction
 
 function T = phase_1_tableau(A, b, m, n)
 	T(1, 1) = -sum(b);
-	T(1, 2:n+1) = -sum(A(:, 1:n));
+	if m > 1
+		T(1, 2:n+1) = -sum(A(:, 1:n));
+	else
+		T(1, 2:n+1) = -A(1, 1:n);
+	endif
 	T(1, n+2:n+m+1) = zeros(1, m);
 	T(2:m+1, 1) = b;
 	T(2:m+1, 2:m+n+1) = A;
@@ -117,7 +123,9 @@ endfunction
 
 function [ind x] = phase_2(T, B, c, m, n, print)
 
-	printf("Simplex: Fase 2\n\n");
+	if print
+		printf("Simplex: Fase 2\n\n");
+	endif
 
 	# Calcula linha 1 do tableau inicial da fase 2.
 	c_B = c(B);
@@ -163,6 +171,11 @@ function [T B iter ind x] = tableau_solve(T, B, m, n, print, iter)
 				if i_pivot == 0
 					ind = -1;
 					x = [];
+					
+					if print
+						print_tableau(T, B, m, n, 0, 0, iter++);
+					endif
+					
 					return;
 				endif
 			
@@ -218,21 +231,21 @@ function print_tableau(T, B, m, n, i_pivot, j_pivot, iter)
 	printf("Iteração %d\n", iter);
 	
 	# Imprime linha com nome das variáveis.
-	printf("           |");
+	printf("            |");
 	for j = 1:n
-		printf(" x%d      |", j);
+		printf(" x%-2d     |", j);
 	endfor
 	printf("\n");
 	
 	# Imprime linha com custo e custos reduzidos.
-	printf(" %9.3f |", T(1, 1));
+	printf("  %9.3f |", T(1, 1));
 	for j = 2:n+1
 		printf(" %7.3f |", T(1, j));
 	endfor
 	printf("\n");
 	
 	# Imprime linha pontilhada.
-	printf("------------");
+	printf("-------------");
 	for j = 2:n+1
 		printf("----------");
 	endfor
@@ -240,8 +253,8 @@ function print_tableau(T, B, m, n, i_pivot, j_pivot, iter)
 	
 	# Imprime demais linhas do tableau.
 	for i = 2:m+1
-		# Primeira coluna com nome das variáveis básicas.
-		printf("x%d %7.3f |", B(i - 1), T(i, 1));
+		# Primeira coluna aparece com as variáveis básicas.
+		printf("x%-2d %7.3f |", B(i - 1), T(i, 1));
 		for j = 2:n+1
 			if i_pivot != 0 && j_pivot != 0 && i == i_pivot && j == j_pivot
 				mark = '*';

@@ -1,12 +1,9 @@
-m = 4;
-n = 4;
-A = [1, 2, 3, 0
-    -1, 2, 6, 0
-     0, 4, 9, 0
-     0, 0, 3, 1];
-b = [3, 2, 5, 1]';
-c = [1, 1, 1, 0]';
-[ind x] = simplex(A, b, c, m, n, true);
+m = randi([1, 20])
+n = randi([m, 20])
+A = randn(m, n)
+b = randn(m, 1)
+c = randn(n, 1)
+[ind x] = simplex(A, b, c, m, n, true)
 
 
 #m = 3;
