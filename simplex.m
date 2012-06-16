@@ -88,7 +88,7 @@ function [T B m] = remove_redundants(T, B, m, n, print, iter)
 			endif
 		endif
 	endfor
-	if remove_idx != []
+	if length(remove_idx) > 0
 		B(remove_idx) = [];
 		T(remove_idx + 1, :) = [];
 		m -= length(remove_idx);
