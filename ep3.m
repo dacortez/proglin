@@ -1,9 +1,27 @@
-m = randi([5, 15])
-n = randi([20, 50])
-A = randi([0, 1], m, n)
-b = ones(m, 1)
-c = rand(n, 1)
-[ind x] = simplex(A, b, c, m, n, true)
+1;
+
+function show_answer(ind, x, n, c)
+	if ind == 0
+		printf("Solução encontrada:\n");
+		for i = 1:n
+			printf("x%-2d   = %7.5f\n", i, x(i));
+		endfor
+		printf("Custo = %7.5f\n", c' * x);
+	elseif ind == 1
+		printf("Problema inviável.\n");
+	elseif ind == -1
+		printf("Problema ilimitado.\n");
+	endif
+endfunction
+
+# Exemplo 1
+m = 2; n = 2;
+A = [1 -2
+     2 -4];
+b = [2 4]';
+c = [1 -1]';
+[ind x] = simplex(A, b, c, m, n, true);
+show_answer(ind, x, n, c);
 
 
 #m = 3;
