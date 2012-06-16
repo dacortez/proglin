@@ -43,14 +43,14 @@ function [T B m ind] = phase_1(A, b, m, n, print)
 		T(:, n+2:n+m+1) = [];
 
 		# Remove restrições redundantes.
-		[T B m] = remove_redundants(T, B, m, n, print, iter++);
+		[T B m] = remove_redundants(T, B, m, n, print, iter);
 		
 		# Retira variáveis artificiais da solução básica encontrada.
-		[T B] = exit_artificials(T, B, m, n, print, iter++);
+		[T B] = exit_artificials(T, B, m, n, print, iter);
 		
 		# Tableau final da fase 1.
 		if print
-			print_tableau(T, B, m, n, 0, 0, iter++);
+			print_tableau(T, B, m, n, 0, 0, iter++, "tableau final da fase 1");
 		endif
 	endif
 endfunction

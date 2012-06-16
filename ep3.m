@@ -13,6 +13,7 @@ endfunction
 
 
 # Exemplo 1
+printf("---------\n");
 printf("Exemplo 1\n");
 printf("---------\n");
 m = 2 
@@ -20,12 +21,13 @@ n = 2
 A = [1 -2
      2 -8]
 b = [2 4]'
-c = [1 -1]'
+c = [-5 -1]'
 [ind x] = simplex(A, b, c, m, n, true);
 show_answer(ind, x, n, c);
 
 
 # Exemplo 2
+printf("---------\n");
 printf("Exemplo 2\n");
 printf("---------\n");
 m = 3
