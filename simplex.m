@@ -43,14 +43,15 @@ function [T B m ind] = phase_1(A, b, m, n, print)
 		T(:, n+2:n+m+1) = [];
 
 		# Remove restrições redundantes.
-		[T B m] = remove_redundants(T, B, m, n);
+		[T B m] = remove_redundants(T, B, m, n, print, iter++);
 		
+		# Retira variáveis artificiais da solução básica encontrada.
+		[T B] = exit_artificials(T, B, m, n, print, iter++);
+		
+		# Tableau final da fase 1.
 		if print
 			print_tableau(T, B, m, n, 0, 0, iter++);
 		endif
-
-		# Retira variáveis artificiais da solução básica encontrada.
-		[T B] = exit_artificials(T, B, m, n, iter++);
 	endif
 endfunction
 
@@ -78,7 +79,7 @@ function T = phase_1_tableau(A, b, m, n)
 endfunction
 
 
-function [T B m] = remove_redundants(T, B, m, n)
+function [T B m] = remove_redundants(T, B, m, n, print, iter)
 	remove_idx = []; 
 	for i = 1:m
 		if B(i) > n
@@ -87,19 +88,24 @@ function [T B m] = remove_redundants(T, B, m, n)
 			endif
 		endif
 	endfor
-	B(remove_idx) = [];
-	T(remove_idx + 1, :) = [];
-	m -= length(remove_idx);
+	if remove_idx != []
+		B(remove_idx) = [];
+		T(remove_idx + 1, :) = [];
+		m -= length(remove_idx);
+		if print
+			print_tableau(T, B, m, n, 0, 0, iter++, "removendo variáveis redundantes");
+		endif
+	endif
 endfunction
 
 
-function [T B] = exit_artificials(T, B, m, n, iter)
+function [T B] = exit_artificials(T, B, m, n, print, iter)
 	for i = 1:m
 		if B(i) > n
 			for j = 1:n
 				if T(i + 1, j + 1) != 0
 					if print
-						print_tableau(T, B, m, n, i + 1, j + 1, iter++);
+						print_tableau(T, B, m, n, i + 1, j + 1, iter++, "removendo variável artificial");
 					endif
 					T = pivot(T, i + 1, j + 1, m + 1, n + 1);
 					B(i) = j;
@@ -226,9 +232,13 @@ function T = pivot(T, i_pivot, j_pivot, m, n)
 endfunction
 
 
-function print_tableau(T, B, m, n, i_pivot, j_pivot, iter)
-	# Número da interação.
-	printf("Iteração %d\n", iter);
+function print_tableau(T, B, m, n, i_pivot, j_pivot, iter, msg)
+	# Imprime número da interação (e mensagem se passada).
+	if nargin() == 7
+		printf("Iteração %d\n", iter);
+	else
+		printf("Iteração %d (%s)\n", iter, msg);
+	endif
 	
 	# Imprime linha com nome das variáveis.
 	printf("            |");
