@@ -2,11 +2,8 @@
 
 function show_answer(ind, x, n, c)
 	if ind == 0
-		printf("Solução encontrada:\n");
-		for i = 1:n
-			printf("x%-2d   = %7.5f\n", i, x(i));
-		endfor
-		printf("Custo = %7.5f\n", c' * x);
+		printf("Solução ótima encontrada com custo %7.5f:\n", c' * x);
+		x
 	elseif ind == 1
 		printf("Problema inviável.\n");
 	elseif ind == -1
