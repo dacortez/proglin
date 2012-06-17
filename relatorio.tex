@@ -80,12 +80,73 @@
 \section{Introdução}
 \label{sec:introducao}
 
-Apresentamos neste relatório a implementação do método simplex utilizando o tableau, através da 
-linguagem de programação Octave. O algoritmo é desenvolvido em detalhes em~\cite{bertsimas}, 
-resultando nos seguintes passos:
+Apresentamos neste relatório a implementação do método simplex (full tableau), utilizando a 
+linguagem de programação Octave. O algoritmo é desenvolvido em detalhes em~\cite{bertsimas}.
+Considera-se o problema de programação linear em seu formato padrão
+%
+\begin{equation*}
+	\begin{array}{rl}
+		\text{minimizar} & \vet{c}^T \vet{x} \\
+		\text{sujeito a} & \vet{A} \vet{x} = \vet{b} \\\
+		                 & \vet{x} \geq \vet{0} \, ,
+	 \end{array}
+\end{equation*}
+%
+onde $\vet{x}, \vet{c} \in \R^n$, $\vet{b} \in \R^m$ e $\vet{A} \in \R^{m \times n}$. 
+O algoritmo pode ser descrito pelos seguintes passos:
 
-\begin{verbatim}
-\end{verbatim}
+\vspace{0.5cm}
+
+\noindent {\bf Fase I.}
+\vspace{-0.2cm}
+\begin{enumerate}
+	\item Multiplique algumas das restrições por $-1$, modificando o problema de tal forma que  
+	$\vet{b} \geq 0$.
+	\item Introduza variáveis artificiais $y_1, \ldots, y_m$ e aplique o método simplex ao problema
+	auxiliar com custo $\sum_{i=1}^{m}y_i$.
+	\item Se o custo ótimo do problema auxiliar é positivo, o problema original é inviável e o 
+	algoritmo termina.
+	\item Se o custo ótimo do problema auxiliar é nulo, uma solução viável do problema original é 
+	obtida. Se nenhuma variável artificial está na base final, as variáveis artificiais e respectivas
+	colunas são eliminadas, e uma base viável para o problema original está disponível.
+	\item Se a $\ell$-ésima variável básica é artificial, examine a $\ell$-ésima entrada das
+	colunas $\vet{B}^{-1}\vet{A}_j$, $j = 1, \ldots, n$. Se todas as entradas são nulas, então a 
+	$\ell$-ésima linha representa uma restrição redundante e é eliminada. De outra forma, se a 
+	$\ell$-ésima entrada da $j$-ésima coluna é diferente de zero, aplique uma mudança de base:
+	a $\ell$-ésima variável básica sai e $x_j$ entra na base. Repita esse procedimento até que todas 
+	as variáveis artificiais sejam levadas para fora da base.
+\end{enumerate}
+
+\noindent {\bf Fase II.}
+\vspace{-0.2cm}
+\begin{enumerate}
+	\item Faça a base e o tableau final obtidos na fase I serem a base e o tableau inicial para a 
+	fase~II.
+	\item Calcule o custo reduzido de todas as variáveis para essa base inicial, usando o vetor de 
+	custos do problema original.
+	\item Aplique o método simplex ao problema original.
+\end{enumerate}
+
+\noindent {\bf Uma iteração da implementação através do tableau.}
+\vspace{-0.2cm}
+\begin{enumerate}
+	\item Uma iteração típica começa com um tableau associado com uma matriz básica $\vet{B}$ e a 
+	solução básica correspondente $\vet{x}$.
+	\item Examine todos os custos reduzidos na linha zero do tableau. Se todos forem não-negativos,
+	a solução viável básica atual é ótima, e o algoritmo termina. Caso contrário, escolha algum $j$
+	tal que $\overline{c}_j < 0$.
+	\item Considere o vetor $\vet{u} = \vet{B}^{-1}\vet{A}_j$, que é a $j$-ésima coluna (a coluna 
+	pivô) do tableau. Se nenhuma componente de $\vet{u}$ é positiva, o custo ótimo é $-\infty$ e o 
+	algoritmo termina.
+	\item Para cada $i$ tal que $u_i > 0$, calcule a razão $x_{B(i)}/u_i$. Seja $\ell$ o índice da 
+	linha que corresponde à menor razão. A coluna $\vet{A}_{B(\ell)}$ saí da base e a coluna 
+	$\vet{A}_j$ entra.
+	\item Adicione a cada linha do tableau um múltiplo constante da $\ell$-ésima linha tal que o 
+	$u_\ell$ (elemento pivô) se torne um e todas as outras entradas da coluna pivô se tornem zero. 
+\end{enumerate}
+
+A implementação do método simplex em Octave seguiu extamente os passos acima, conforme descrevemos
+a seguir.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
