@@ -1,0 +1,118 @@
+% Tipo de documento
+\documentclass[12pt,a4paper]{article}
+
+% Pacotes
+%\usepackage{showlabels}
+\usepackage{latexsym}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[pdftex]{graphicx}
+
+% Paginação
+%\textwidth 15.0cm                    % Largura
+%\textheight 22.0cm                   % Altura
+%\addtolength{\oddsidemargin}{0.0cm}  % Margem esquerda (impar)
+%\addtolength{\evensidemargin}{0.0cm} % Margem esquerda (par)
+%\addtolength{\topmargin}{0.0cm}      % Margem superior
+
+% Estilo dos parágrafos
+\sloppy                              % Mais flexível
+\setlength{\jot}{13pt}               % Distância entre linhas do eqnarray
+\setlength{\parskip}{1ex}            % Distância entre parágrafos
+\renewcommand{\baselinestretch}{1.0} % Distância entre linhas
+
+% Comandos customizados
+\newcommand{\vet}{\mathbf}                                   % vetor
+\newcommand{\ie}{\emph{i.e.}}                                % isto é
+\newcommand{\prodint}[2]{\left\langle #1 , #2 \right\rangle} % produto interno
+\newcommand{\Fullbox}{{\rule{2.0mm}{2.0mm}}}                 % caixa cheia
+\newcommand{\EOS}{\hfill\Box\vspace{-0.2cm}}                 % fim de enunciado
+\newcommand{\EOP}{\hfill\Fullbox\vspace{0.2cm}}              % fim de prova
+\newcommand{\eps}{\varepsilon}                               % epsilon
+\newcommand{\defi}{\: := \: }                                % definição
+\newcommand{\del}{\partial}                                  % derivada parcial
+
+% Contagem de equações por seção
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+% Contagem de figuras por seção
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+
+% Contagem de tabelas por seção
+\renewcommand{\thetable}{\thesection.\arabic{table}}
+
+% Zerar as contagem em cada seção
+\newcommand{\zerar}{\setcounter{equation}{0}\setcounter{figure}{0}\setcounter{table}{0}}
+
+% Operadores
+\DeclareMathOperator{\sen}{sen}
+\DeclareMathOperator{\tg}{tg}
+\DeclareMathOperator{\cotg}{cotg}
+\DeclareMathOperator{\im}{im}
+\DeclareMathOperator{\arctg}{arctg}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\tr}{tr}
+
+% Conjunto de números
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{Programação Linear \\ Relatório EP3 -- Método Simplex}
+\author{Daniel Augusto Cortez -- 2960291 \\ Lucas Rodrigues Colucci -- 6920251}
+\date{\today}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\zerar
+\section{Introdução}
+\label{sec:introducao}
+
+Apresentamos neste relatório a implementação do método simplex utilizando o tableau, através da 
+linguagem de programação Octave. O algoritmo é desenvolvido em detalhes em~\cite{bertsimas}, 
+resultando nos seguintes passos:
+
+\begin{verbatim}
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\zerar
+\section{Funções Implementadas}
+\label{sec:funcoes}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\zerar
+\section{Alguns Exemplos}
+\label{sec:exemplos}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\zerar
+\section{Utilização do Programa}
+\label{sec:programa}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{thebibliography}{99}
+	\bibitem{bertsimas} D.~Bertsimas \& J.~N.~Tsitsiklis, {\it Introduction to Linear Optimization}, 
+	1997, Athena Scientific.
+\end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
+
