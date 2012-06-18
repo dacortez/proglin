@@ -15,7 +15,7 @@ function [ind x] = simplex(A, b, c, m, n, print)
 endfunction 
 
 
-function [T B m ind] = phase_1(A, b, m, n, print)
+function [T B m] = phase_1(A, b, m, n, print)
 	
 	if print
 		printf("Simplex: Fase 1\n\n");

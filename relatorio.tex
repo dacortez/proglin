@@ -12,11 +12,11 @@
 \usepackage[pdftex]{graphicx}
 
 % Paginação
-%\textwidth 15.0cm                    % Largura
-%\textheight 22.0cm                   % Altura
-%\addtolength{\oddsidemargin}{0.0cm}  % Margem esquerda (impar)
-%\addtolength{\evensidemargin}{0.0cm} % Margem esquerda (par)
-%\addtolength{\topmargin}{0.0cm}      % Margem superior
+%\textwidth 18.0cm                    % Largura
+%\textheight 23.0cm                   % Altura
+%\addtolength{\oddsidemargin}{-2.3cm}  % Margem esquerda (impar)
+%\addtolength{\evensidemargin}{-2.3cm} % Margem esquerda (par)
+%\addtolength{\topmargin}{-1.0cm}      % Margem superior
 
 % Estilo dos parágrafos
 \sloppy                              % Mais flexível
@@ -84,13 +84,13 @@ Apresentamos neste relatório a implementação do método simplex (full tableau
 linguagem de programação Octave. O algoritmo é desenvolvido em detalhes em~\cite{bertsimas}.
 Considera-se o problema de programação linear em seu formato padrão
 %
-\begin{equation*}
+\begin{equation} \label{eq:PL}
 	\begin{array}{rl}
 		\text{minimizar} & \vet{c}^T \vet{x} \\
 		\text{sujeito a} & \vet{A} \vet{x} = \vet{b} \\\
 		                 & \vet{x} \geq \vet{0} \, ,
 	 \end{array}
-\end{equation*}
+\end{equation}
 %
 onde $\vet{x}, \vet{c} \in \R^n$, $\vet{b} \in \R^m$ e $\vet{A} \in \R^{m \times n}$. 
 O algoritmo pode ser descrito pelos seguintes passos:
@@ -128,6 +128,7 @@ O algoritmo pode ser descrito pelos seguintes passos:
 \end{enumerate}
 
 \noindent {\bf Uma iteração da implementação através do tableau.}
+\label{iteracao}
 \vspace{-0.2cm}
 \begin{enumerate}
 	\item Uma iteração típica começa com um tableau associado com uma matriz básica $\vet{B}$ e a 
@@ -154,17 +155,697 @@ a seguir.
 \section{Funções Implementadas}
 \label{sec:funcoes}
 
+No arquivo \verb|simplex.m|, escrevemos a função 
+%
+\begin{verbatim}
+	[ind x] = simplex(A, b, c, m, n, print)
+\end{verbatim}  
+%
+que pode ser chamada externamente para resolver qualquer PL na forma (\ref{eq:PL}). 
+Os parâmetros de entrada da função são:
+%
+\begin{itemize}
+	\item $\vet{A}$: matriz de dimensão $m \times n$ de coeficientes das restrições;
+	\item $\vet{b}$: vetor de dimensão $m$ do lado direito das restrições;
+	\item $\vet{c}$: vetor de dimensão $n$ de custos;
+	\item $m$: número de restrições;
+	\item $n$: número de variáveis;
+	\item \verb|print|: booleano indicando se o tableau deve ser impresso a cada iteração.  
+\end{itemize} 
+%
+Os parâmetros de saída são:
+%
+\begin{itemize}
+	\item \verb|ind|: valor $0$ se o problema tiver solução ótima finita, $-1$ se tiver solução
+	ilimitada e $+1$ se o problema for inviável;
+	\item $\vet{x}$: solução ótima do problema, quando existir.
+\end{itemize}
+%
+A função \verb|simplex| começa resolvendo a fase I do método simplex. Em seguida, testa se o custo
+encontrado na fase I é positivo. Nesse caso, o problema é inviável. Caso contrário, prossegue com
+a fase II. 
+
+
+A fase I do método é resolvida pela função
+%
+\begin{verbatim}
+	[T B m] = phase_1(A, B, m, n, print)
+\end{verbatim}
+%
+Os parâmetros de entrada da função são:
+%
+\begin{itemize}
+	\item $\vet{A}$: matriz de dimensão $m \times n$ de coeficientes das restrições;
+	\item $\vet{b}$: vetor de dimensão $m$ do lado direito das restrições;
+	\item $m$: número de restrições;
+	\item $n$: número de variáveis;
+	\item \verb|print|: booleano indicando se o tableau deve ser impresso a cada iteração.  
+\end{itemize} 
+%
+Os parâmetros de saída são:
+%
+\begin{itemize}
+	\item $T$: matriz de dimensão $(m+1) \times (n+1)$ que representa o tableau final da fase 1;
+	\item $B$: vetor de índices das variáveis básicas;
+	\item $m$: número de linhas do tableau final, excluindo a primeira linha. 
+\end{itemize}
+%
+A função \verb|phase_1| começa colocando o problema (\ref{eq:PL}) no formato $\vet{b} \geq 0$,
+depois adiciona as $m$ variáveis artificiais à matriz $\vet{A}$ (colocando uma matriz identidade
+$m \times m$ depois da última coluna de $\vet{A}$). Em seguida, monta o tableau inicial em $T$
+(implementado na função \verb|phase_1_tableau|). O vetor de índices das variáveis básicas $B$ é
+inicialmente definido com os índices das variáveis artificiais. O tableau T é então iterado, 
+pivotando de acordo com o método simplex, através da função \verb|tableau_solve|. O tableau
+resultante das iterações é testado para verificar a viabilidade do problema original (custo nulo). 
+Se o problema for viável, prossegue removendo as colunas das variáveis artificias do tableau, depois
+removendo possíveis restrições redundantes (função \verb|remove_redundants|), e finalmente remove
+as variáveis artificiais da solução básica encontrada, se estiverem presentes (função 
+\verb|exit_artificials|). Essas duas últimas funções implementam o passo 5 da fase I do método 
+simplex.
+
+A fase II do método é resolvida pela função
+%
+\begin{verbatim}
+	[ind x] = phase_2(T, B, c, m, n, print)
+\end{verbatim}
+%
+Os parâmetros de entrada da função são:
+%
+\begin{itemize}
+	\item $T$: matriz de dimensão $(m+1) \times (n+1)$ que representa o tableau final da fase 1;
+	\item $B$: vetor de índices das variáveis básicas;
+	\item $\vet{c}$: vetor de dimensão $n$ de custos;
+	\item $m$: número de restrições;
+	\item $n$: número de variáveis;
+	\item \verb|print|: booleano indicando se o tableau deve ser impresso a cada iteração.  
+\end{itemize} 
+%
+Os parâmetros de saída são:
+%
+\begin{itemize}
+	\item \verb|ind|: valor $0$ se o problema tiver solução ótima finita, $-1$ se tiver solução 
+	ilimitada e $+1$ se o problema for inviável;
+	\item $\vet{x}$: solução ótima do problema, quanado existir.
+\end{itemize}
+%
+A fase II começa calculando o custo e os custos reduzidos do problema original em função do 
+tableau final retornado pela fase I. Esses custos são utilizados para atualizar a primeira linha
+do tableau, que é iterado em seguida pela função \verb|tableau_solve|.
+
+
+Tanto a fase I quanto a fase II utilizam essencialmente a função
+%
+\begin{verbatim}
+	[T B iter ind x] = tableau_solve(T, B, m, n, print, iter)
+\end{verbatim}
+%
+cujos parâmetros de entrada são
+%
+\begin{itemize}
+	\item $T$: matriz de dimensão $(m+1) \times (n+1)$ que representa o tableau da iteração 
+	\verb|iter|$ - 1$;
+	\item $B$: vetor de índices das variáveis básicas da iteração \verb|iter|$ - 1$;
+	\item $m$: número de variáveis básicas;
+	\item $n$: número de variáveis;
+	\item \verb|print|: booleano indicando se o tableau deve ser impresso a cada iteração.  
+	\item \verb|iter|: número da iteração atual.
+\end{itemize} 
+%
+Os parâmetros de saída são:
+%
+\begin{itemize}
+	\item $T$: matriz de dimensão $(m+1) \times (n+1)$ que representa o tableau da iteração 
+	\verb|iter|;
+	\item $B$: vetor de índices das variáveis básicas da iteração \verb|iter|;
+	\item \verb|iter|: número da iteração atual.
+	\item \verb|ind|: valor $0$ se o problema tiver solução ótima finita, $-1$ se tiver solução
+	ilimitada e $+1$ se o problema for inviável;
+	\item $\vet{x}$: solução ótima do problema, quando existir.
+\end{itemize}
+%
+A função acima implementa os passos descritos no algoritmo ``Uma iteração da implementação através 
+do tableau" (página~\pageref{iteracao}). A mesma utiliza a regra Bland~\cite{bertsimas} na 
+determinação da variável básica a sair da base e da não-básica a entrar na mesma. Com isso,
+evita-se a possibilidade do algoritmo ciclar. A operação básica em \verb|tableau_solve| é a 
+pivotação do tableau, que é feita pela função \verb|pivot|.
+
+
+A impressão do tableau durante a execução do programa é feita pela função
+%
+\begin{verbatim}
+	print_tableau(T, B, m, n, i_pivot, j_pivot, iter, msg)
+\end{verbatim}
+%
+Os parâmetros de entrada dessa função são
+%
+\begin{itemize}
+	\item $T$: matriz de dimensão $(m+1) \times (n+1)$ que representa o tableau da iteração 
+	\verb|iter|;
+	\item $B$: vetor de índices das variáveis básicas da iteração \verb|iter|;
+	\item $m$: número de variáveis básicas;
+	\item $n$: número de variáveis;
+	\item \verb|i_pivot|: linha de pivotamento do tableau (zero caso não aplicável);
+	\item \verb|j_pivot|: coluna de pivotamento do tableau (zero caso não aplicável)
+	\item \verb|iter|: número da iteração atual.
+	\item \verb|msg|: observação a ser impressa ao lado do número da iteração.
+\end{itemize} 
+%
+A função basicamente itera sobre todas as entradas da matriz $T$, imprimindo o seu conteúdo com
+a formatação adequada. Caso o elemento iterado corresponda à posição (\verb|i_pivot|, 
+\verb|j_pivot|), um símbolo $\ast$ é impresso para marcar o pivô.
+
+
+As demais funções implementadas são utilizadas para modularizar o código e são de propósito 
+específico:
+%
+\begin{verbatim}
+[A b] = make_b_positive(A, b, m, n)
+[T B m] = remove_redundants(T, B, m, n, print, iter)
+[T B] = exit_artificials(T, B, m, n, print, iter)
+bool = is_zero_vector(v)
+x = get_solution(T, B, m, n)
+T = pivot(T, i_pivot, j_pivot, m, n)
+\end{verbatim}
+%
+Não entraremos em detalhes sobre a implementação das mesmas.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \zerar
 \section{Alguns Exemplos}
 \label{sec:exemplos}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Os exemplos abaixo mostram a saída gerada ao se rodar o script \verb|ep3.m| com o Octave.
+(\verb|$ ocatve -qf ep3.m|). O script apresenta a formulação de 7 problemas no formato 
+(\ref{eq:PL}) que são resolvidos com a função \verb|simplex| implementada em \verb|simplex.m| e
+descrita anteriormente. Os exemplos mostram problemas com uma solução ótima finita (1, 2 e 3),
+problemas inviáveis (4 e 5) e problemas ilimitados com custo $-\infty$ (6 e 7).
 
-\zerar
-\section{Utilização do Programa}
-\label{sec:programa}
+\begin{tiny}
+\begin{verbatim}
+-------------------------------------
+Exemplo 1 - Solução Ótima - Linhas LI
+-------------------------------------
+m =  3
+n =  6
+A =
+
+   1   2   2   1   0   0
+   2   1   2   0   1   0
+   2   2   1   0   0   1
+
+b =
+
+   20
+   20
+   20
+
+c =
+
+  -10
+  -12
+  -12
+    0
+    0
+    0
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      | x9      |
+    -60.000 |  -5.000 |  -5.000 |  -5.000 |  -1.000 |  -1.000 |  -1.000 |   0.000 |   0.000 |   0.000 |
+-------------------------------------------------------------------------------------------------------
+x7   20.000 |   1.000 |   2.000 |   2.000 |   1.000 |   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |
+x8   20.000 |   2.000*|   1.000 |   2.000 |   0.000 |   1.000 |   0.000 |   0.000 |   1.000 |   0.000 |
+x9   20.000 |   2.000 |   2.000 |   1.000 |   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      | x9      |
+    -10.000 |   0.000 |  -2.500 |   0.000 |  -1.000 |   1.500 |  -1.000 |   0.000 |   2.500 |   0.000 |
+-------------------------------------------------------------------------------------------------------
+x7   10.000 |   0.000 |   1.500 |   1.000 |   1.000 |  -0.500 |   0.000 |   1.000 |  -0.500 |   0.000 |
+x1   10.000 |   1.000 |   0.500 |   1.000 |   0.000 |   0.500 |   0.000 |   0.000 |   0.500 |   0.000 |
+x9    0.000 |   0.000 |   1.000*|  -1.000 |   0.000 |  -1.000 |   1.000 |   0.000 |  -1.000 |   1.000 |
+
+Iteração 3
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      | x9      |
+    -10.000 |   0.000 |   0.000 |  -2.500 |  -1.000 |  -1.000 |   1.500 |   0.000 |   0.000 |   2.500 |
+-------------------------------------------------------------------------------------------------------
+x7   10.000 |   0.000 |   0.000 |   2.500*|   1.000 |   1.000 |  -1.500 |   1.000 |   1.000 |  -1.500 |
+x1   10.000 |   1.000 |   0.000 |   1.500 |   0.000 |   1.000 |  -0.500 |   0.000 |   1.000 |  -0.500 |
+x2    0.000 |   0.000 |   1.000 |  -1.000 |   0.000 |  -1.000 |   1.000 |   0.000 |  -1.000 |   1.000 |
+
+Iteração 4
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      | x9      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   1.000 |   1.000 |   1.000 |
+-------------------------------------------------------------------------------------------------------
+x3    4.000 |   0.000 |   0.000 |   1.000 |   0.400 |   0.400 |  -0.600 |   0.400 |   0.400 |  -0.600 |
+x1    4.000 |   1.000 |   0.000 |   0.000 |  -0.600 |   0.400 |   0.400 |  -0.600 |   0.400 |   0.400 |
+x2    4.000 |   0.000 |   1.000 |   0.000 |   0.400 |  -0.600 |   0.400 |   0.400 |  -0.600 |   0.400 |
+
+Iteração 5 (tableau final da fase 1)
+            | x1      | x2      | x3      | x4      | x5      | x6      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |
+-------------------------------------------------------------------------
+x3    4.000 |   0.000 |   0.000 |   1.000 |   0.400 |   0.400 |  -0.600 |
+x1    4.000 |   1.000 |   0.000 |   0.000 |  -0.600 |   0.400 |   0.400 |
+x2    4.000 |   0.000 |   1.000 |   0.000 |   0.400 |  -0.600 |   0.400 |
+
+Simplex: Fase 2
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      | x6      |
+    136.000 |   0.000 |   0.000 |   0.000 |   3.600 |   1.600 |   1.600 |
+-------------------------------------------------------------------------
+x3    4.000 |   0.000 |   0.000 |   1.000 |   0.400 |   0.400 |  -0.600 |
+x1    4.000 |   1.000 |   0.000 |   0.000 |  -0.600 |   0.400 |   0.400 |
+x2    4.000 |   0.000 |   1.000 |   0.000 |   0.400 |  -0.600 |   0.400 |
+
+Solução ótima encontrada com custo -136.00000:
+x =
+
+   4
+   4
+   4
+   0
+   0
+   0
+
+
+-------------------------------------
+Exemplo 2 - Solução Ótima - Linhas LD
+-------------------------------------
+m =  4
+n =  4
+A =
+
+   1   2   3   0
+  -1   2   6   0
+   0   4   9   0
+   0   0   3   1
+
+b =
+
+   3
+   2
+   5
+   1
+
+c =
+
+   1
+   1
+   1
+   0
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+    -11.000 |  -0.000 |  -8.000 | -21.000 |  -1.000 |   0.000 |   0.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x5    3.000 |   1.000 |   2.000 |   3.000 |   0.000 |   1.000 |   0.000 |   0.000 |   0.000 |
+x6    2.000 |  -1.000 |   2.000*|   6.000 |   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |
+x7    5.000 |   0.000 |   4.000 |   9.000 |   0.000 |   0.000 |   0.000 |   1.000 |   0.000 |
+x8    1.000 |   0.000 |   0.000 |   3.000 |   1.000 |   0.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -3.000 |  -4.000 |   0.000 |   3.000 |  -1.000 |   0.000 |   4.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x5    1.000 |   2.000*|   0.000 |  -3.000 |   0.000 |   1.000 |  -1.000 |   0.000 |   0.000 |
+x2    1.000 |  -0.500 |   1.000 |   3.000 |   0.000 |   0.000 |   0.500 |   0.000 |   0.000 |
+x7    1.000 |   2.000 |   0.000 |  -3.000 |   0.000 |   0.000 |  -2.000 |   1.000 |   0.000 |
+x8    1.000 |   0.000 |   0.000 |   3.000 |   1.000 |   0.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 3
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -1.000 |   0.000 |   0.000 |  -3.000 |  -1.000 |   2.000 |   2.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x1    0.500 |   1.000 |   0.000 |  -1.500 |   0.000 |   0.500 |  -0.500 |   0.000 |   0.000 |
+x2    1.250 |   0.000 |   1.000 |   2.250 |   0.000 |   0.250 |   0.250 |   0.000 |   0.000 |
+x7    0.000 |   0.000 |   0.000 |   0.000 |   0.000 |  -1.000 |  -1.000 |   1.000 |   0.000 |
+x8    1.000 |   0.000 |   0.000 |   3.000*|   1.000 |   0.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 4
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   2.000 |   2.000 |   0.000 |   1.000 |
+---------------------------------------------------------------------------------------------
+x1    1.000 |   1.000 |   0.000 |   0.000 |   0.500 |   0.500 |  -0.500 |   0.000 |   0.500 |
+x2    0.500 |   0.000 |   1.000 |   0.000 |  -0.750 |   0.250 |   0.250 |   0.000 |  -0.750 |
+x7    0.000 |   0.000 |   0.000 |   0.000 |   0.000 |  -1.000 |  -1.000 |   1.000 |   0.000 |
+x3    0.333 |   0.000 |   0.000 |   1.000 |   0.333 |   0.000 |   0.000 |   0.000 |   0.333 |
+
+Iteração 5 (removendo variáveis redundantes)
+            | x1      | x2      | x3      | x4      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |
+-----------------------------------------------------
+x1    1.000 |   1.000 |   0.000 |   0.000 |   0.500 |
+x2    0.500 |   0.000 |   1.000 |   0.000 |  -0.750 |
+x3    0.333 |   0.000 |   0.000 |   1.000 |   0.333 |
+
+Iteração 5 (tableau final da fase 1)
+            | x1      | x2      | x3      | x4      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |
+-----------------------------------------------------
+x1    1.000 |   1.000 |   0.000 |   0.000 |   0.500 |
+x2    0.500 |   0.000 |   1.000 |   0.000 |  -0.750 |
+x3    0.333 |   0.000 |   0.000 |   1.000 |   0.333 |
+
+Simplex: Fase 2
+
+Iteração 1
+            | x1      | x2      | x3      | x4      |
+     -1.833 |   0.000 |   0.000 |   0.000 |  -0.083 |
+-----------------------------------------------------
+x1    1.000 |   1.000 |   0.000 |   0.000 |   0.500 |
+x2    0.500 |   0.000 |   1.000 |   0.000 |  -0.750 |
+x3    0.333 |   0.000 |   0.000 |   1.000 |   0.333*|
+
+Iteração 2
+            | x1      | x2      | x3      | x4      |
+     -1.750 |   0.000 |   0.000 |   0.250 |   0.000 |
+-----------------------------------------------------
+x1    0.500 |   1.000 |   0.000 |  -1.500 |   0.000 |
+x2    1.250 |   0.000 |   1.000 |   2.250 |   0.000 |
+x4    1.000 |   0.000 |   0.000 |   3.000 |   1.000 |
+
+Solução ótima encontrada com custo 1.75000:
+x =
+
+   0.50000
+   1.25000
+   0.00000
+   1.00000
+
+
+---------------------------------------------------------------------
+Exemplo 3 - Solução Ótima - Removendo Variáveis Artificiais na Fase 1
+---------------------------------------------------------------------
+m =  2
+n =  2
+A =
+
+   1  -2
+   2  -8
+
+b =
+
+   2
+   4
+
+c =
+
+  -5
+  -1
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      |
+     -6.000 |  -3.000 |  10.000 |   0.000 |   0.000 |
+-----------------------------------------------------
+x3    2.000 |   1.000*|  -2.000 |   1.000 |   0.000 |
+x4    4.000 |   2.000 |  -8.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      |
+      0.000 |   0.000 |   4.000 |   3.000 |   0.000 |
+-----------------------------------------------------
+x1    2.000 |   1.000 |  -2.000 |   1.000 |   0.000 |
+x4    0.000 |   0.000 |  -4.000 |  -2.000 |   1.000 |
+
+Iteração 3 (removendo variável artificial)
+            | x1      | x2      |
+      0.000 |   0.000 |   4.000 |
+---------------------------------
+x1    2.000 |   1.000 |  -2.000 |
+x4    0.000 |   0.000 |  -4.000*|
+
+Iteração 3 (tableau final da fase 1)
+            | x1      | x2      |
+      0.000 |   0.000 |   0.000 |
+---------------------------------
+x1    2.000 |   1.000 |   0.000 |
+x2   -0.000 |  -0.000 |   1.000 |
+
+Simplex: Fase 2
+
+Iteração 1
+            | x1      | x2      |
+     10.000 |   0.000 |   0.000 |
+---------------------------------
+x1    2.000 |   1.000 |   0.000 |
+x2   -0.000 |  -0.000 |   1.000 |
+
+Solução ótima encontrada com custo -10.00000:
+x =
+
+   2
+  -0
+
+
+---------------------------------------
+Exemplo 4 - Problema Inviável - Simples
+---------------------------------------
+m =  2
+n =  2
+A =
+
+   1   2
+   2   4
+
+b =
+
+   1
+   3
+
+c =
+
+   1
+   1
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      |
+     -4.000 |  -3.000 |  -6.000 |   0.000 |   0.000 |
+-----------------------------------------------------
+x3    1.000 |   1.000*|   2.000 |   1.000 |   0.000 |
+x4    3.000 |   2.000 |   4.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      |
+     -1.000 |   0.000 |   0.000 |   3.000 |   0.000 |
+-----------------------------------------------------
+x1    1.000 |   1.000 |   2.000 |   1.000 |   0.000 |
+x4    1.000 |   0.000 |   0.000 |  -2.000 |   1.000 |
+
+Problema inviável.
+
+-----------------------------
+Exemplo 5 - Problema Inviável
+-----------------------------
+m =  3
+n =  5
+A =
+
+   -2   -3    5    3   -6
+    1  -13    4    1   -7
+    0    6    2    3    1
+
+b =
+
+   -9
+  -12
+    1
+
+c =
+
+  -1
+  -2
+   1
+   2
+   3
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+    -22.000 |  -1.000 | -22.000 |   7.000 |   1.000 | -14.000 |   0.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x6    9.000 |   2.000*|   3.000 |  -5.000 |  -3.000 |   6.000 |   1.000 |   0.000 |   0.000 |
+x7   12.000 |  -1.000 |  13.000 |  -4.000 |  -1.000 |   7.000 |   0.000 |   1.000 |   0.000 |
+x8    1.000 |   0.000 |   6.000 |   2.000 |   3.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+    -17.500 |   0.000 | -20.500 |   4.500 |  -0.500 | -11.000 |   0.500 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x1    4.500 |   1.000 |   1.500 |  -2.500 |  -1.500 |   3.000 |   0.500 |   0.000 |   0.000 |
+x7   16.500 |   0.000 |  14.500 |  -6.500 |  -2.500 |  10.000 |   0.500 |   1.000 |   0.000 |
+x8    1.000 |   0.000 |   6.000*|   2.000 |   3.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 3
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+    -14.083 |   0.000 |   0.000 |  11.333 |   9.750 |  -7.583 |   0.500 |   0.000 |   3.417 |
+---------------------------------------------------------------------------------------------
+x1    4.250 |   1.000 |   0.000 |  -3.000 |  -2.250 |   2.750 |   0.500 |   0.000 |  -0.250 |
+x7   14.083 |   0.000 |   0.000 | -11.333 |  -9.750 |   7.583 |   0.500 |   1.000 |  -2.417 |
+x2    0.167 |   0.000 |   1.000 |   0.333 |   0.500 |   0.167*|   0.000 |   0.000 |   0.167 |
+
+Iteração 4
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -6.500 |   0.000 |  45.500 |  26.500 |  32.500 |   0.000 |   0.500 |   0.000 |  11.000 |
+---------------------------------------------------------------------------------------------
+x1    1.500 |   1.000 | -16.500 |  -8.500 | -10.500 |   0.000 |   0.500 |   0.000 |  -3.000 |
+x7    6.500 |   0.000 | -45.500 | -26.500 | -32.500 |   0.000 |   0.500 |   1.000 | -10.000 |
+x5    1.000 |   0.000 |   6.000 |   2.000 |   3.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Problema inviável.
+
+----------------------------------------
+Exemplo 6 - Problema Ilimitado - Simples
+----------------------------------------
+m =  1
+n =  3
+A =
+
+   0   1   1
+
+b =  1
+c =
+
+  -1
+   0
+   0
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      |
+     -1.000 |  -0.000 |  -1.000 |  -1.000 |   0.000 |
+-----------------------------------------------------
+x4    1.000 |   0.000 |   1.000*|   1.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      |
+      0.000 |   0.000 |   0.000 |   0.000 |   1.000 |
+-----------------------------------------------------
+x2    1.000 |   0.000 |   1.000 |   1.000 |   1.000 |
+
+Iteração 3 (tableau final da fase 1)
+            | x1      | x2      | x3      |
+      0.000 |   0.000 |   0.000 |   0.000 |
+-------------------------------------------
+x2    1.000 |   0.000 |   1.000 |   1.000 |
+
+Simplex: Fase 2
+
+Iteração 1
+            | x1      | x2      | x3      |
+     -0.000 |  -1.000 |   0.000 |   0.000 |
+-------------------------------------------
+x2    1.000 |   0.000 |   1.000 |   1.000 |
+
+Problema ilimitado.
+
+------------------------------
+Exemplo 7 - Problema Ilimitado
+------------------------------
+m =  3
+n =  5
+A =
+
+  -5   1   1   0   0
+  -2   1   0  -1   0
+  -1   1   0   0  -1
+
+b =
+
+   1
+  -1
+  -2
+
+c =
+
+   1
+  -1
+   1
+   1
+  -1
+
+Simplex: Fase 1
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -4.000 |   2.000 |   1.000 |  -1.000 |  -1.000 |  -1.000 |   0.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x6    1.000 |  -5.000 |   1.000 |   1.000*|   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |
+x7    1.000 |   2.000 |  -1.000 |  -0.000 |   1.000 |  -0.000 |   0.000 |   1.000 |   0.000 |
+x8    2.000 |   1.000 |  -1.000 |  -0.000 |  -0.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -3.000 |  -3.000 |   2.000 |   0.000 |  -1.000 |  -1.000 |   1.000 |   0.000 |   0.000 |
+---------------------------------------------------------------------------------------------
+x3    1.000 |  -5.000 |   1.000 |   1.000 |   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |
+x7    1.000 |   2.000*|  -1.000 |   0.000 |   1.000 |   0.000 |   0.000 |   1.000 |   0.000 |
+x8    2.000 |   1.000 |  -1.000 |   0.000 |   0.000 |   1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 3
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+     -1.500 |   0.000 |   0.500 |   0.000 |   0.500 |  -1.000 |   1.000 |   1.500 |   0.000 |
+---------------------------------------------------------------------------------------------
+x3    3.500 |   0.000 |  -1.500 |   1.000 |   2.500 |   0.000 |   1.000 |   2.500 |   0.000 |
+x1    0.500 |   1.000 |  -0.500 |   0.000 |   0.500 |   0.000 |   0.000 |   0.500 |   0.000 |
+x8    1.500 |   0.000 |  -0.500 |   0.000 |  -0.500 |   1.000*|   0.000 |  -0.500 |   1.000 |
+
+Iteração 4
+            | x1      | x2      | x3      | x4      | x5      | x6      | x7      | x8      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   1.000 |   1.000 |   1.000 |
+---------------------------------------------------------------------------------------------
+x3    3.500 |   0.000 |  -1.500 |   1.000 |   2.500 |   0.000 |   1.000 |   2.500 |   0.000 |
+x1    0.500 |   1.000 |  -0.500 |   0.000 |   0.500 |   0.000 |   0.000 |   0.500 |   0.000 |
+x5    1.500 |   0.000 |  -0.500 |   0.000 |  -0.500 |   1.000 |   0.000 |  -0.500 |   1.000 |
+
+Iteração 5 (tableau final da fase 1)
+            | x1      | x2      | x3      | x4      | x5      |
+      0.000 |   0.000 |   0.000 |   0.000 |   0.000 |   0.000 |
+---------------------------------------------------------------
+x3    3.500 |   0.000 |  -1.500 |   1.000 |   2.500 |   0.000 |
+x1    0.500 |   1.000 |  -0.500 |   0.000 |   0.500 |   0.000 |
+x5    1.500 |   0.000 |  -0.500 |   0.000 |  -0.500 |   1.000 |
+
+Simplex: Fase 2
+
+Iteração 1
+            | x1      | x2      | x3      | x4      | x5      |
+     -2.500 |   0.000 |   0.500 |   0.000 |  -2.500 |   0.000 |
+---------------------------------------------------------------
+x3    3.500 |   0.000 |  -1.500 |   1.000 |   2.500 |   0.000 |
+x1    0.500 |   1.000 |  -0.500 |   0.000 |   0.500*|   0.000 |
+x5    1.500 |   0.000 |  -0.500 |   0.000 |  -0.500 |   1.000 |
+
+Iteração 2
+            | x1      | x2      | x3      | x4      | x5      |
+      0.000 |   5.000 |  -2.000 |   0.000 |   0.000 |   0.000 |
+---------------------------------------------------------------
+x3    1.000 |  -5.000 |   1.000*|   1.000 |   0.000 |   0.000 |
+x4    1.000 |   2.000 |  -1.000 |   0.000 |   1.000 |   0.000 |
+x5    2.000 |   1.000 |  -1.000 |   0.000 |   0.000 |   1.000 |
+
+Iteração 3
+            | x1      | x2      | x3      | x4      | x5      |
+      2.000 |  -5.000 |   0.000 |   2.000 |   0.000 |   0.000 |
+---------------------------------------------------------------
+x2    1.000 |  -5.000 |   1.000 |   1.000 |   0.000 |   0.000 |
+x4    2.000 |  -3.000 |   0.000 |   1.000 |   1.000 |   0.000 |
+x5    3.000 |  -4.000 |   0.000 |   1.000 |   0.000 |   1.000 |
+
+Problema ilimitado.
+\end{verbatim}
+\end{tiny}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
