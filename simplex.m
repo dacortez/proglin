@@ -1,3 +1,13 @@
+# 
+# MAC0315 - Programação Linear
+# EP3 - Método Simplex (Full Tableau)
+#
+# Autores: Daniel Augusto Cortez - 2960291
+#          Lucas Rodrigues Colucci - 6920251
+#
+# Versão: 18-06-2012
+#
+
 function [ind x] = simplex(A, b, c, m, n, print)
 	
 	# Resolve a fase 1 do problema.

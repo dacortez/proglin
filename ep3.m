@@ -1,3 +1,13 @@
+# 
+# MAC0315 - Programação Linear
+# EP3 - Método Simplex (Full Tableau)
+#
+# Autores: Daniel Augusto Cortez - 2960291
+#          Lucas Rodrigues Colucci - 6920251
+#
+# Versão: 18-06-2012
+#
+
 1;
 
 function show_answer(ind, x, c)
