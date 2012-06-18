@@ -1,6 +1,6 @@
 1;
 
-function show_answer(ind, x, n, c)
+function show_answer(ind, x, c)
 	if ind == 0
 		printf("Solução ótima encontrada com custo %7.5f:\n", c' * x);
 		x
@@ -25,7 +25,7 @@ A = [1 2 2 1 0 0
 b = [20 20 20]'
 c = [-10 -12 -12 0 0 0]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 2 - Bertsimas & Tsitsiklis p. 114
@@ -42,13 +42,13 @@ A = [1 2 3 0
 b = [3 2 5 1]'
 c = [1 1 1 0]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 3
 printf("\n");
 printf("---------------------------------------------------------------------\n");
-printf("Exemplo 3 - Solução Ótima - Removendo Variáveis Artificiais na Fase 1\n");
+printf("Exemplo 3 - Solução Ótima - Removendo Variáveis Artificiais na Fase I\n");
 printf("---------------------------------------------------------------------\n");
 m = 2 
 n = 2
@@ -57,7 +57,7 @@ A = [1 -2
 b = [2 4]'
 c = [-5 -1]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 4
@@ -72,7 +72,7 @@ A = [1 2
 b = [1 3]'
 c = [1 1]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 5
@@ -88,7 +88,7 @@ A = [-2 -3  5 3 -6
 b = [-9 -12 1]'
 c = [-1 -2 1 2 3]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 6
@@ -102,7 +102,7 @@ A = [0 1 1]
 b = [1]'
 c = [-1 0 0]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
 
 
 # Exemplo 7
@@ -118,4 +118,4 @@ A = [-5 1 1  0  0
 b = [1 -1 -2]'
 c = [1 -1 1 1 -1]'
 [ind x] = simplex(A, b, c, m, n, true);
-show_answer(ind, x, n, c);
+show_answer(ind, x, c);
